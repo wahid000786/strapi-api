@@ -48,7 +48,7 @@ jobs:
           # Clone the Strapi repository
           git clone https://github.com/wahid000786/strapi-api.git
           cd my-project
-
+          
           # Install Strapi globally
           sudo npm install strapi@beta -g
 
@@ -66,3 +66,5 @@ jobs:
 
           # Deployment completed
           echo "Deployment completed."
+          
+          EOF
