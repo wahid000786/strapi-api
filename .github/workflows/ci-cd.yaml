@@ -1,70 +1,40 @@
-name: CI/CD for Strapi
+name: CI/CD Pipeline for strapi deployment (Build & deploy)
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.19.1'  # Ensure this matches the Node.js version required by Strapi
 
-    - name: Upgrade npm
-      run: npm install -g npm@latest
+      - name: Install dependencies
+        run: npm install
 
-    - name: Clear npm cache
-      run: npm cache clean --force
+      - name: Build Strapi
+        run: yarn build
 
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        script: |
-          set -e
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_KEY }}
 
-          # Update the package list and upgrade packages
-          sudo apt update
-          sudo apt upgrade -y
-
-          # Install Node.js and npm if not installed
-          sudo apt install -y nodejs npm
-
-          # Check if the 'new-strapi' directory exists and is not empty, and remove it if necessary
-          if [ -d "new-strapi" ]; then
-            rm -rf new-strapi
-          fi
-
-          # Clone the Strapi repository
-          git clone https://github.com/wahid000786/strapi-api.git
-          cd my-project
-          
-          # Install Strapi globally
-          sudo npm install strapi@beta -g
-
-          # Create a new Strapi project
-          strapi new new-project --dbclient=sqlite
-
-          # Navigate to the new project directory
-          cd new-project
-
-          # Install pm2 
-           npm install -g pm2
-
-          # Start the Strapi application 
-           pm2 start npm --name "strapi" -- run develop
-
-          # Deployment completed
-          echo "Deployment completed."
-          
-          EOF
+      - name: Deploy to EC2
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd /home/ubuntu/strapi && yarn develop"
