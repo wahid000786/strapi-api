@@ -1,43 +1,31 @@
-name: CI/CD Pipeline for strapi deployment (Build & deploy)
-
-on:
+name: Deploy Strapi
+'on':
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.19.1'  # Ensure this matches the Node.js version required by Strapi
-          
-      - name: Delete existing directory
-        run: rm -rf strapi-api
-      
+          node-version: 18.19.1
       - name: Install dependencies
         run: npm install
-
       - name: Build Strapi
         run: yarn build
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.EC2_KEY }}
-
+      
       - name: Deploy to EC2
-        env:
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd /home/ubuntu/strapi && yarn develop"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/ubuntu/strapi
+            git pull origin main
+            yarn install
+            yarn build
