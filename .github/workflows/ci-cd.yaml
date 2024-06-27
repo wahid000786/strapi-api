@@ -15,19 +15,37 @@ jobs:
           node-version: 18.19.1
       - name: Install dependencies
         run: npm install
+        
       - name: Build Strapi
         run: yarn build
       
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            cd /home/ubuntu/my-project
+        env:
+          HOSTNAME: ${{ secrets.EC2_HOST }}
+          USER_NAME: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} << 'EOF'
+            # Navigate to your project directory
+            cd ~/my-project
+            
+            # Install pm2 if not already installed
+            if ! command -v pm2 &> /dev/null
+            then
+              echo "pm2 not found, installing..."
+              sudo npm install -g pm2
+            else
+              echo "pm2 is already installed"
+            fi
+
+            # Pull the latest changes from the repository
             git pull origin main
-            npm install
-            npm run build
-            pm2 restart strapi
-            EOF
+
+            # Install the necessary dependencies
+            yarn install
+
+            # Build the Strapi application
+            yarn build
+
+            # Restart the Strapi server using pm2
+            pm2 restart strapi || pm2 start npm --name strapi -- run develop
+          EOF
