@@ -1,24 +1,23 @@
-name: Deploy Strapi
-'on':
+name: Deploy to EC2
+
+on:
   push:
     branches:
       - main
+
 jobs:
-  build:
+  Deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          node-version: 18.19.1
-      - name: Install dependencies
-        run: npm install
-        
-      - name: Build Strapi
-        run: yarn build
-      
+          ssh-private-key: ${{ secrets.EC2_KEY }}
+
       - name: Deploy to EC2
         env:
           HOSTNAME: ${{ secrets.EC2_HOST }}
@@ -47,5 +46,5 @@ jobs:
             yarn build
 
             # Restart the Strapi server using pm2
-            pm2 restart strapi || pm2 start npm --name strapi -- run develop
+            pm2 restart strapi
           EOF
