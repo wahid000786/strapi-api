@@ -11,7 +11,7 @@ jobs:
     
     steps:
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+        uses: webfactory/ssh-agent@v0.5.3
         with:
           KEY: ${{ secrets.EC2_KEY }}
           HOSTNAME: ${{ secrets.EC2_HOST }}
