@@ -12,10 +12,12 @@ jobs:
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
-        env:
-          ssh-private-key: ${{ secrets.EC2_KEY }}
+        with:
+          KEY: ${{ secrets.EC2_KEY }}
           HOSTNAME: ${{ secrets.EC2_HOST }}
           USER_NAME: ${{ secrets.EC2_USER }}
+          port: 22
+          debug: true
           sript: |
             ssh -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} << 'EOF'
               # Navigate to your project directory
@@ -34,10 +36,10 @@ jobs:
               git pull origin main
 
               # Install the necessary dependencies
-              yarn install
+              npm install
 
               # Build the Strapi application
-              yarn build
+              npm build
 
               # Restart the Strapi server using pm2
               pm2 restart strapi-api || pm2 start npm --name strapi-api
