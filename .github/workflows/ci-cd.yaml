@@ -24,7 +24,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.172.141.130 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@100.25.215.229 << 'EOF'
 
           # Get into the project directory
           cd /home/ubuntu/my-project
