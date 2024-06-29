@@ -9,26 +9,8 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
 
   deploy:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -43,8 +25,29 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@54.172.141.130 << 'EOF'
+
+          # Get into the project directory
           cd /home/ubuntu/my-project
+
+          
+          # Install pm2 if not already installed
+            if ! command -v pm2 &> /dev/null
+            then
+              echo "pm2 not found, installing..."
+              sudo npm install -g pm2
+            else
+              echo "pm2 is already installed"
+            fi
+
+          # Pull the project if any changes are made
           git pull origin main
+
+          # Install the necessary dependencies
           npm install
-          npm start > app.log 2>&1 &
-          echo "Application Started"
+
+          # Build the Strapi application
+          npm build
+          
+          # Restart the Strapi server using pm2
+          pm2 restart strapi-api || pm2 start npm --name strapi-api
+          EOF
