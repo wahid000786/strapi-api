@@ -44,7 +44,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@54.172.141.130 << 'EOF'
           cd /home/ubuntu/my-project
-          git pull origin master
+          git pull origin main
           npm install
           pm2 restart new-project
           EOF
