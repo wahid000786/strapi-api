@@ -46,5 +46,5 @@ jobs:
           cd /home/ubuntu/my-project
           git pull origin master
           npm install
-          pm2 restart strapi
+          pm2 restart new-project
           EOF
