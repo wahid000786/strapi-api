@@ -42,9 +42,9 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.172.141.130 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-54-172-141-130.compute-1.amazonaws.com << 'EOF'
           cd /home/ubuntu/my-project
           git pull origin main
           npm install
-          pm2 restart strapi-api
-          EOF
+          npm start > app.log 2>&1 &
+          echo "Application Started"
